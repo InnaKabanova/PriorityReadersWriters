@@ -2,46 +2,32 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
-
-/* NOTES for myself:
- *
- * pthread_t is an arithmetic type, long unsigned int;
- * use %lu to print pthread_t {aka long unsigned int} via printf;
- *
-*/
-
-/* TO DO 4: re-write with custom number of writers and readers */
-/* TO DO 5: split into several files */
-
-// pthread_mutex_lock(&mutex);
-// critical section here
-// pthread_mutex_unlock(&mutex);
-// pthread_self() - return identifier of current thread
+#include <unistd.h>
 
 #define VERBOSE_DEBUGGING
 
 #define READERS_NUM 5
 #define WRITERS_NUM 5
-
-#define READING_TIMES 10
-#define WRITING_TIMES 10
+#define READS_NUM 10
+#define WRITES_NUM 10
 
 /* Functions to be threaded: */
-void* read();
-void* write(void* message);
+void* read_shared_data();
+void* write_shared_data(void* fruit);
 
 /* Helper functions: */
-void rollback()
-{
-     /* TO DO 1: research on how to cleanup properly before exiting */
-}
+static const char* fruits_arr[5] = {"Watermelon", "Pear", "Pomegranate", "Mango", "Carambola"};
+const char* get_random_fruit();
+int make_delay();
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-// static pthread_cond_t read_phase = PTHREAD_COND_INITIALIZER;
-static pthread_cond_t write_phase = PTHREAD_COND_INITIALIZER;
-/* Shared variables: */
-static unsigned int readers_counter = 0;
-static char* shared_string;
+/* Global shared data: */
+unsigned int readers_counter = 0;
+char* shared_string;
+
+/* Global synchronization variables: */
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t read_phase = PTHREAD_COND_INITIALIZER;
+pthread_cond_t write_phase = PTHREAD_COND_INITIALIZER;
 
 int main()
 {
@@ -51,16 +37,14 @@ int main()
     pthread_t readers_arr[READERS_NUM];
     pthread_t writers_arr[WRITERS_NUM];
 
-    char* values_arr[WRITERS_NUM] = {"Watermelon", "Pear", "Pomegranate", "Mango", "Carambola"};
-
+    /* Create and start the readers: */
     for(i = 0; i < READERS_NUM; i++)
     {
         #ifdef VERBOSE_DEBUGGING
         printf("VERBOSE| Will create a READER thread #%i. Uninitialized thread ID: %lu\n", i, readers_arr[i]);
         #endif /* VERBOSE_DEBUGGING */
 
-        creation_status = pthread_create(&readers_arr[i], NULL, read, NULL);
-
+        creation_status = pthread_create(&readers_arr[i], NULL, read_shared_data, NULL);
         if(creation_status == 0)
         {
             #ifdef VERBOSE_DEBUGGING
@@ -69,7 +53,6 @@ int main()
         }
         else
         {
-            /* TO DO 2: do proper cleanup here! */
             #ifdef VERBOSE_DEBUGGING
             printf("VERBOSE| Failed to create READER thread #%i. Errno: %i\n", i, creation_status);
             #endif /* VERBOSE_DEBUGGING */
@@ -77,14 +60,14 @@ int main()
         }
     }
 
+    /* Create and start the writers: */
     for(i = 0; i < WRITERS_NUM; i++)
     {
         #ifdef VERBOSE_DEBUGGING
         printf("VERBOSE| Will create a WRITER thread #%i. Uninitialized thread ID: %lu\n", i, writers_arr[i]);
         #endif /* VERBOSE_DEBUGGING */
 
-        creation_status = pthread_create(&writers_arr[i], NULL, write, (void*)values_arr[i]);
-
+        creation_status = pthread_create(&writers_arr[i], NULL, write_shared_data, (void*)get_random_fruit());
         if(creation_status == 0)
         {
             #ifdef VERBOSE_DEBUGGING
@@ -93,7 +76,6 @@ int main()
         }
         else
         {
-            /* TO DO 3: do proper cleanup here! */
             #ifdef VERBOSE_DEBUGGING
             printf("VERBOSE| Failed to create WRITER thread #%i. Errno: %i\n", i, creation_status);
             #endif /* VERBOSE_DEBUGGING */
@@ -101,6 +83,7 @@ int main()
         }
     }
 
+    /* Wait for readers & writers termination: */
     for(i = 0; i < READERS_NUM; i++)
     {
         pthread_join(readers_arr[i], NULL);
@@ -113,38 +96,36 @@ int main()
     exit(EXIT_SUCCESS);
 }
 
-void make_delay(double delay_in_seconds)
+int make_delay()
 {
-    const time_t start_time = time(NULL);
-    time_t current_time;
-    do
-    {
-        time(&current_time);
-    }
-    while(difftime(current_time, start_time) < delay_in_seconds);
+    int delay;
+    srand(time(NULL));
+    delay = rand() % 4;
+    sleep(delay);
+    return delay;
 }
 
-double generate_delay(int range)
+const char* get_random_fruit()
 {
-    return (double)(rand() % range);
+    srand(time(NULL));
+    return fruits_arr[rand() % 4];
 }
 
-void* read()
+void* read_shared_data()
 {
-    /* Pseudo random time delay: */
-    double delay = generate_delay(10);
-    make_delay(delay);
-    #ifdef VERBOSE_DEBUGGING
-    printf("VERBOSE | Delay of READ thread %lu is %f\n", pthread_self(), delay);
-    #endif /* VERBOSE_DEBUGGING */
-
     int i;
-    for(i = 0; i < READING_TIMES; i++)
+    for(i = 0; i < READS_NUM; i++)
     {
+        int delay = make_delay();
+        #ifdef VERBOSE_DEBUGGING
+        printf("VERBOSE | Delay of READ thread %lu was %i sec.\n", pthread_self(), delay);
+        #endif /* VERBOSE_DEBUGGING */
+
         pthread_mutex_lock(&mutex);
             readers_counter++;
         pthread_mutex_unlock(&mutex);
 
+        /* Real critical section: reading data */
         printf("READING | ID: %lu | Value: %s | Readers count: %i\n", pthread_self(), shared_string, readers_counter);
 
         pthread_mutex_lock(&mutex);
@@ -153,54 +134,39 @@ void* read()
             {
                 pthread_cond_signal(&write_phase);
             }
-
-            if(i == READING_TIMES - 1)
-                printf("END| Thread %lu has ended reading READING_TIMES times.\n", pthread_self());
+            #ifdef VERBOSE_DEBUGGING
+            if(i == READS_NUM - 1)
+                printf("END| Thread %lu has ended reading %i times.\n", pthread_self(), i + 1);
+            #endif /* VERBOSE_DEBUGGING */
         pthread_mutex_unlock(&mutex);
     }
 
-    pthread_exit(NULL);
+    pthread_exit(0);
 }
 
-void* write(void* message)
+void* write_shared_data(void* fruit)
 {
-    /* Pseudo random time delay: */
-    double delay = generate_delay(10);
-    make_delay(delay);
-    #ifdef VERBOSE_DEBUGGING
-    printf("VERBOSE | Delay of WRITE thread %lu is %f\n", pthread_self(), delay);
-    #endif /* VERBOSE_DEBUGGING */
-
     int i;
-    for(i = 0; i < WRITING_TIMES; i++)
+    for(i = 0; i < WRITES_NUM; i++)
     {
+        int delay = make_delay();
+        #ifdef VERBOSE_DEBUGGING
+        printf("VERBOSE | Delay of WRITE thread %lu was %i sec.\n", pthread_self(), delay);
+        #endif /* VERBOSE_DEBUGGING */
+
         pthread_mutex_lock(&mutex);
             while(readers_counter != 0)
                 pthread_cond_wait(&write_phase, &mutex);
 
-            shared_string = (char*)message;
+            shared_string = (char*)fruit;
             printf("WRITING | ID: %lu | New value: %s | Readers count: %i\n", pthread_self(), shared_string, readers_counter);
 
-            if(i == WRITING_TIMES - 1)
-            {
-                printf("END| Thread %lu has ended writing WRITING_TIMES times.\n", pthread_self());
-            }
+            #ifdef VERBOSE_DEBUGGING
+            if(i == WRITES_NUM - 1)
+                printf("END| Thread %lu has ended writing %i times.\n", pthread_self(), i + 1);
+            #endif
         pthread_mutex_unlock(&mutex);
     }
 
-
-    pthread_exit(NULL);
+    pthread_exit(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
