@@ -17,7 +17,6 @@ unsigned int shared_var = 0;
 
 /* Global synchronization variables: */
 unsigned int readers_counter = 0;
-unsigned int waiting_readers_counter = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t read_phase = PTHREAD_COND_INITIALIZER; /* Whether the readers ... */
 pthread_cond_t write_phase = PTHREAD_COND_INITIALIZER; /* ... or the writers can go next. */
@@ -130,20 +129,26 @@ void* read_shared_data(void* argument_data)
 
         /* Enter critical section: */
         pthread_mutex_lock(&mutex);
+        {
+            if(readers_counter == -1)
+                pthread_cond_wait(&read_phase, &mutex);
             readers_counter++;
+        }
         pthread_mutex_unlock(&mutex);
 
-        /* Critical section: */
+        /* Critical section, READ: */
         printf("READER %i | Value: %i | Readers count: %i ||| Cycle: %i of %i\n",
                this_thread_id, shared_var, readers_counter, i, READS_NUM);
 
         /* Exit critical section: */
         pthread_mutex_lock(&mutex);
+        {
             readers_counter--;
             if(readers_counter == 0)
             {
                 pthread_cond_signal(&write_phase);
             }
+        }
         pthread_mutex_unlock(&mutex);
     }
 
@@ -162,14 +167,27 @@ void* write_shared_data(void* argument_data)
         printf("VERBOSE | Delay of WRITER %i was %i sec.\n", this_thread_id, delay);
         #endif /* VERBOSE_DEBUGGING */
 
+        /* Enter critical section: */
         pthread_mutex_lock(&mutex);
+        {
             while(readers_counter != 0)
                 pthread_cond_wait(&write_phase, &mutex);
+            readers_counter = -1;
+        }
+        pthread_mutex_unlock(&mutex);
 
-            shared_var++;
-            printf("WRITER %i | New value: %i | Readers count: %i ||| Cycle: %i of %i\n",
-                   this_thread_id, shared_var, readers_counter, i, WRITES_NUM);
+        /* Critical section, WRITE: */
+        shared_var++;
+        printf("WRITER %i | New value: %i | Readers count: %i ||| Cycle: %i of %i\n",
+               this_thread_id, shared_var, readers_counter, i, WRITES_NUM);
 
+        /* Exit critical section: */
+        pthread_mutex_lock(&mutex);
+        {
+            readers_counter = 0;
+            pthread_cond_broadcast(&read_phase);
+            pthread_cond_signal(&write_phase);
+        }
         pthread_mutex_unlock(&mutex);
     }
 

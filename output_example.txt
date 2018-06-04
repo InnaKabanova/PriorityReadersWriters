@@ -1,0 +1,50 @@
+READER 2 | Value: 0 | Readers count: 1 ||| Cycle: 1 of 5
+READER 3 | Value: 0 | Readers count: 2 ||| Cycle: 1 of 5
+READER 4 | Value: 0 | Readers count: 2 ||| Cycle: 1 of 5
+READER 5 | Value: 0 | Readers count: 3 ||| Cycle: 1 of 5
+READER 2 | Value: 0 | Readers count: 2 ||| Cycle: 2 of 5
+READER 3 | Value: 0 | Readers count: 1 ||| Cycle: 2 of 5
+READER 2 | Value: 0 | Readers count: 1 ||| Cycle: 3 of 5
+READER 4 | Value: 0 | Readers count: 1 ||| Cycle: 2 of 5
+READER 1 | Value: 0 | Readers count: 1 ||| Cycle: 1 of 5
+WRITER 1 | New value: 1 | Readers count: -1 ||| Cycle: 1 of 5
+READER 3 | Value: 1 | Readers count: 1 ||| Cycle: 3 of 5
+WRITER 2 | New value: 2 | Readers count: -1 ||| Cycle: 1 of 5
+READER 4 | Value: 2 | Readers count: 1 ||| Cycle: 3 of 5
+WRITER 5 | New value: 3 | Readers count: -1 ||| Cycle: 1 of 5
+WRITER 3 | New value: 4 | Readers count: -1 ||| Cycle: 1 of 5
+WRITER 4 | New value: 5 | Readers count: -1 ||| Cycle: 1 of 5
+WRITER 5 | New value: 6 | Readers count: -1 ||| Cycle: 2 of 5
+WRITER 3 | New value: 7 | Readers count: -1 ||| Cycle: 2 of 5
+WRITER 4 | New value: 8 | Readers count: -1 ||| Cycle: 2 of 5
+WRITER 5 | New value: 9 | Readers count: -1 ||| Cycle: 3 of 5
+WRITER 4 | New value: 10 | Readers count: -1 ||| Cycle: 3 of 5
+WRITER 5 | New value: 11 | Readers count: -1 ||| Cycle: 4 of 5
+WRITER 4 | New value: 12 | Readers count: -1 ||| Cycle: 4 of 5
+WRITER 5 | New value: 13 | Readers count: -1 ||| Cycle: 5 of 5
+WRITER 4 | New value: 14 | Readers count: -1 ||| Cycle: 5 of 5
+READER 2 | Value: 14 | Readers count: 1 ||| Cycle: 4 of 5
+WRITER 1 | New value: 15 | Readers count: -1 ||| Cycle: 2 of 5
+READER 5 | Value: 15 | Readers count: 1 ||| Cycle: 2 of 5
+READER 4 | Value: 15 | Readers count: 1 ||| Cycle: 4 of 5
+READER 3 | Value: 15 | Readers count: 2 ||| Cycle: 4 of 5
+WRITER 3 | New value: 16 | Readers count: -1 ||| Cycle: 3 of 5
+READER 1 | Value: 16 | Readers count: 1 ||| Cycle: 2 of 5
+READER 5 | Value: 16 | Readers count: 1 ||| Cycle: 3 of 5
+WRITER 2 | New value: 17 | Readers count: -1 ||| Cycle: 2 of 5
+READER 4 | Value: 17 | Readers count: 1 ||| Cycle: 5 of 5
+READER 3 | Value: 17 | Readers count: 1 ||| Cycle: 5 of 5
+WRITER 3 | New value: 18 | Readers count: -1 ||| Cycle: 4 of 5
+READER 2 | Value: 18 | Readers count: 1 ||| Cycle: 5 of 5
+READER 5 | Value: 18 | Readers count: 1 ||| Cycle: 4 of 5
+READER 1 | Value: 18 | Readers count: 2 ||| Cycle: 3 of 5
+WRITER 2 | New value: 19 | Readers count: -1 ||| Cycle: 3 of 5
+WRITER 1 | New value: 20 | Readers count: -1 ||| Cycle: 3 of 5
+WRITER 3 | New value: 21 | Readers count: -1 ||| Cycle: 5 of 5
+READER 1 | Value: 21 | Readers count: 1 ||| Cycle: 4 of 5
+READER 1 | Value: 21 | Readers count: 1 ||| Cycle: 5 of 5
+READER 5 | Value: 21 | Readers count: 1 ||| Cycle: 5 of 5
+WRITER 2 | New value: 22 | Readers count: -1 ||| Cycle: 4 of 5
+WRITER 1 | New value: 23 | Readers count: -1 ||| Cycle: 4 of 5
+WRITER 1 | New value: 24 | Readers count: -1 ||| Cycle: 5 of 5
+WRITER 2 | New value: 25 | Readers count: -1 ||| Cycle: 5 of 5
