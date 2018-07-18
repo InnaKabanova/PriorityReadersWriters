@@ -54,7 +54,6 @@ int main()
     /* 2. Create and start the readers: */
     for(i = 0; i < READERS_NUM; i++)
     {
-        int new_thread_id = i;
         creation_status = pthread_create(&readers_arr[i], NULL, read_shared_data,
                                                                 (void*)&readers_ids[i]);
         if(creation_status == 0)
@@ -75,7 +74,6 @@ int main()
     /* 3. Create and start the writers: */
     for(i = 0; i < WRITERS_NUM; i++)
     {
-        int new_thread_id = i;
         creation_status = pthread_create(&writers_arr[i], NULL, write_shared_data,
                                                                 (void*)&writers_ids[i]);
         if(creation_status == 0)
